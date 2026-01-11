@@ -358,7 +358,7 @@ function renderQuestion() {
   if (btnPrev) btnPrev.disabled = current === 0;
   if (btnNext) {
     btnNext.textContent = !answered[current].checked
-      ? "Tiếp → (chấm)"
+      ? "kiểm tra"
       : current === quiz.length - 1
       ? "Kết thúc"
       : "Câu tiếp →";
