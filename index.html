@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ôn tập từ ZIP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- PICK ZIP -->
+    <div class="card" id="screenPick">
+      <h2>Ôn tập từ file ZIP</h2>
+      <p class="muted">
+        ZIP cần có <code>questions.yaml</code> (hoặc <code>questions.yml</code>) ở gốc ZIP và các file ảnh (nếu có).
+        Trong YAML, ảnh dùng cú pháp <code>[img=đường_dẫn_trong_zip]</code>.
+      </p>
+
+      <div class="row">
+        <input type="file" id="zipInput" accept=".zip" />
+        <button class="btn" id="btnLoad" disabled>Mở ZIP</button>
+        <span class="muted" id="pickHint"></span>
+      </div>
+
+      <div class="hr"></div>
+
+      <p class="muted">
+        Quy ước đáp án: <code>##</code> sai, <code>#$</code> đúng.
+        Math LaTeX dùng <code>$$...$$</code>.
+        <br/>Lưu ý: <b>multi chỉ chọn 1 đáp án (A/B/C/D)</b>, <b>truefalse chỉ chọn Đúng/Sai</b>.
+      </p>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="card" id="screenQuiz" style="display:none;">
+      <div class="qhead">
+        <div>
+          <div class="muted" id="quizTitle">Bộ câu hỏi</div>
+          <h2 class="h2tight">Câu <span id="qIndex"></span>/<span id="qTotal"></span></h2>
+        </div>
+        <div class="pill" id="qTypePill"></div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-meta">
+        <div class="badge">Tiến trình: <span id="progressText">0%</span></div>
+        <div class="badge">Đã chấm: <span id="gradedText">0</span>/<span id="totalText">0</span></div>
+      </div>
+      <div class="progress-wrap" aria-label="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div id="qContent"></div>
+      <div class="choices" id="choices"></div>
+
+      <!-- TOOLBAR: Chọn mới cùng hàng với Tiếp -->
+      <div class="toolbar">
+        <button class="btn secondary" id="btnNewCorner" title="Chọn bộ câu hỏi (ZIP) khác">Chọn mới</button>
+
+        <div class="toolbar-spacer"></div>
+        <button class="btn secondary" id="btnPrev">← Trước</button>
+        <button class="btn" id="btnNext">Tiếp →</button>
+      </div>
+
+      <div id="feedback" class="explain" style="display:none;"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card" id="screenResult" style="display:none;">
+      <h2>Kết quả</h2>
+      <p class="muted" id="resultSummary"></p>
+      <div class="list" id="resultList"></div>
+
+      <div class="toolbar" style="margin-top:14px;">
+        <button class="btn" id="btnRetry">Ôn tập tiếp</button>
+        <button class="btn secondary" id="btnNew">Chọn mới</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+
+  <!-- MathJax -->
+  <script>
+    window.MathJax = { tex: {inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$']]} };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
