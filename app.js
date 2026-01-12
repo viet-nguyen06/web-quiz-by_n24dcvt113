@@ -118,31 +118,65 @@ const screenPick = $("screenPick");
 const screenQuiz = $("screenQuiz");
 const screenResult = $("screenResult");
 
+// Local ZIP
 const zipInput = $("zipInput");
 const btnLoad = $("btnLoad");
 const pickHint = $("pickHint");
 
+// Tabs
+const tabLocal = $("tabLocal");
+const tabLibrary = $("tabLibrary");
+const panelLocal = $("panelLocal");
+const panelLibrary = $("panelLibrary");
+
+// Library grid
+const packGrid = $("packGrid");
+const packSearch = $("packSearch");
+const packStatus = $("packStatus");
+
+// Quiz
+const quizTitleEl = $("quizTitle");
 const qIndex = $("qIndex");
 const qTotal = $("qTotal");
 const qTypePill = $("qTypePill");
 const qContent = $("qContent");
 const choicesEl = $("choices");
 const feedback = $("feedback");
-
 const btnPrev = $("btnPrev");
 const btnNext = $("btnNext");
 
+// Result
 const resultSummary = $("resultSummary");
 const resultList = $("resultList");
 const btnRetry = $("btnRetry");
 const btnNew = $("btnNew");
 const btnNewCorner = $("btnNewCorner");
 
-// Progress UI
+// Progress
 const progressBar = $("progressBar");
 const progressText = $("progressText");
 const gradedText = $("gradedText");
 const totalText = $("totalText");
+
+// ===== Packs state =====
+let packs = [];
+
+// ===== Tabs logic =====
+function setPickTab(which) {
+  const isLocal = which === "local";
+
+  tabLocal?.classList.toggle("active", isLocal);
+  tabLocal?.setAttribute("aria-selected", String(isLocal));
+
+  tabLibrary?.classList.toggle("active", !isLocal);
+  tabLibrary?.setAttribute("aria-selected", String(!isLocal));
+
+  if (panelLocal) panelLocal.style.display = isLocal ? "" : "none";
+  if (panelLibrary) panelLibrary.style.display = isLocal ? "none" : "";
+}
+
+tabLocal?.addEventListener("click", () => setPickTab("local"));
+tabLibrary?.addEventListener("click", () => setPickTab("library"));
 
 // ===== Progress =====
 function updateProgress() {
@@ -156,7 +190,105 @@ function updateProgress() {
   if (progressBar) progressBar.style.width = pct + "%";
 }
 
-// ===== Events =====
+// ===== Library grid render =====
+function normalizeText(s) {
+  return String(s || "").toLowerCase().trim();
+}
+
+function renderPackGrid(list) {
+  if (!packGrid) return;
+
+  packGrid.innerHTML = "";
+
+  if (!list.length) {
+    packGrid.innerHTML = `<div class="muted">Không có bộ nào.</div>`;
+    return;
+  }
+
+  for (const p of list) {
+    const chapter = p.chapter || "Chưa phân loại";
+    const title = p.title || p.id || "Untitled";
+    const zipUrl = String(p.zipUrl || "").trim();
+    const pdfUrl = String(p.pdfUrl || "").trim();
+    const meta = p.id ? String(p.id) : "";
+
+    const card = document.createElement("div");
+    card.className = "pack-card";
+
+    card.innerHTML = `
+      <div class="top">
+        <div style="min-width:0;">
+          <div class="title">${escapeHtml(title)}</div>
+          ${meta ? `<div class="meta">${escapeHtml(meta)}</div>` : `<div class="meta">&nbsp;</div>`}
+        </div>
+        <div class="chapter">${escapeHtml(chapter)}</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" ${zipUrl ? "" : "disabled"} data-action="play">Play</button>
+        ${pdfUrl ? `<a class="btn secondary" href="${escapeHtml(pdfUrl)}" target="_blank" style="text-decoration:none;">PDF</a>` : ""}
+      </div>
+    `;
+
+    const playBtn = card.querySelector('button[data-action="play"]');
+    playBtn?.addEventListener("click", async () => {
+      try {
+        if (!zipUrl) return;
+        if (quizTitleEl) quizTitleEl.textContent = title;
+        await loadZipFromUrl(zipUrl);
+        startNewAttempt();
+        showQuiz();
+      } catch (e) {
+        alert("Không mở được ZIP từ link: " + (e?.message || e));
+        console.error(e);
+      }
+    });
+
+    packGrid.appendChild(card);
+  }
+}
+
+function applyPackFilter() {
+  const q = normalizeText(packSearch?.value || "");
+  if (!q) return renderPackGrid(packs);
+
+  const filtered = packs.filter((p) => {
+    const hay = [p.id, p.chapter, p.title].map(normalizeText).join(" ");
+    return hay.includes(q);
+  });
+  renderPackGrid(filtered);
+}
+
+packSearch?.addEventListener("input", applyPackFilter);
+
+// ===== Load packs/index.json =====
+async function loadPackIndex() {
+  try {
+    if (packStatus) packStatus.textContent = "Đang tải danh sách…";
+
+    const res = await fetch("packs/index.json?ts=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    packs = Array.isArray(data.packs) ? data.packs : [];
+
+    if (packStatus) {
+      packStatus.textContent = packs.length ? `Đã tải ${packs.length} bộ` : "packs/index.json rỗng";
+    }
+
+    renderPackGrid(packs);
+  } catch (e) {
+    console.warn("Không load được packs/index.json:", e);
+    if (packStatus) packStatus.textContent = "Không tải được packs/index.json (vẫn dùng ZIP thủ công).";
+    if (packGrid) packGrid.innerHTML = `<div class="muted">Không tải được thư viện.</div>`;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadPackIndex();
+});
+
+// ===== Events: Local ZIP =====
 zipInput?.addEventListener("change", () => {
   btnLoad.disabled = !zipInput.files?.length;
   if (pickHint) pickHint.textContent = zipInput.files?.length ? zipInput.files[0].name : "";
@@ -165,6 +297,7 @@ zipInput?.addEventListener("change", () => {
 btnLoad?.addEventListener("click", async () => {
   try {
     await loadZip(zipInput.files[0]);
+    if (quizTitleEl) quizTitleEl.textContent = "Bộ câu hỏi (ZIP local)";
     startNewAttempt();
     showQuiz();
   } catch (e) {
@@ -173,7 +306,7 @@ btnLoad?.addEventListener("click", async () => {
   }
 });
 
-// Trước
+// ===== Quiz navigation =====
 btnPrev?.addEventListener("click", () => {
   if (current > 0) {
     current--;
@@ -181,10 +314,6 @@ btnPrev?.addEventListener("click", () => {
   }
 });
 
-// Tiếp:
-// - bấm lần 1: chấm + highlight
-// - nếu là câu cuối: chấm xong -> tự mở danh sách
-// - bấm lần 2 (khi đã chấm): sang câu tiếp theo
 btnNext?.addEventListener("click", () => {
   const q = quiz[current];
 
@@ -213,28 +342,24 @@ btnNext?.addEventListener("click", () => {
   }
 });
 
-// Ôn tập tiếp
 btnRetry?.addEventListener("click", () => {
   startNewAttempt();
   showQuiz();
 });
 
-// Chọn mới (ở màn kết quả)
 btnNew?.addEventListener("click", () => {
   resetToPick();
 });
 
-// Chọn mới (góc phải dưới khi đang làm)
 btnNewCorner?.addEventListener("click", () => {
   if (!confirm("Bạn muốn chọn bộ câu hỏi (ZIP) khác? Tiến độ hiện tại sẽ bị reset.")) return;
   resetToPick();
 });
 
-// ===== Core =====
-async function loadZip(file) {
+// ===== ZIP core =====
+async function loadZipFromArrayBuffer(ab) {
   cleanupUrls();
 
-  const ab = await file.arrayBuffer();
   zip = await JSZip.loadAsync(ab);
 
   const qFile = zip.file("questions.yaml") || zip.file("questions.yml");
@@ -275,13 +400,24 @@ async function loadZip(file) {
   });
 }
 
+async function loadZip(file) {
+  const ab = await file.arrayBuffer();
+  return loadZipFromArrayBuffer(ab);
+}
+
+async function loadZipFromUrl(zipUrl) {
+  const res = await fetch(zipUrl, { cache: "no-store" });
+  if (!res.ok) throw new Error("Không tải được ZIP: HTTP " + res.status);
+  const ab = await res.arrayBuffer();
+  return loadZipFromArrayBuffer(ab);
+}
+
+// ===== Quiz core =====
 function startNewAttempt() {
   quiz = shuffle(rawQuestions).map((q) => {
     let choices = parseChoices(q.choicesText);
     if (!choices.length) throw new Error(`Câu id=${q.id}: choices rỗng hoặc sai format ##/#$.`);
 
-    // truefalse: đúng 2 lựa chọn, không xáo trộn
-    // multi (A/B/C/D): xáo trộn lựa chọn
     if (q.type === "truefalse") {
       if (choices.length !== 2) {
         throw new Error(`Câu id=${q.id}: truefalse phải có đúng 2 lựa chọn (Đúng/Sai).`);
@@ -290,7 +426,6 @@ function startNewAttempt() {
       choices = shuffle(choices);
     }
 
-    // MỖI CÂU CHỈ 1 ĐÁP ÁN ĐÚNG
     const correctIdxs = choices.map((c, i) => (c.correct ? i : -1)).filter((i) => i >= 0);
     if (correctIdxs.length !== 1) {
       throw new Error(`Câu id=${q.id}: Mỗi câu chỉ được có đúng 1 đáp án đúng (#$).`);
@@ -324,7 +459,6 @@ function renderQuestion() {
     feedback.innerHTML = "";
   }
 
-  // BOTH TYPES: SINGLE CHOICE => radio
   const name = "q_" + current;
 
   q.choices.forEach((c, idx) => {
@@ -346,7 +480,6 @@ function renderQuestion() {
     input.addEventListener("change", () => {
       if (answered[current].checked) return;
       answered[current].selectedIdxs = getSelectedIdxsSingle();
-      // nếu trước đó skip thì bỏ cờ skip (vì user đang chọn)
       answered[current].skipped = false;
     });
 
@@ -358,7 +491,7 @@ function renderQuestion() {
   if (btnPrev) btnPrev.disabled = current === 0;
   if (btnNext) {
     btnNext.textContent = !answered[current].checked
-      ? "kiểm tra"
+      ? "Tiếp → (chấm)"
       : current === quiz.length - 1
       ? "Kết thúc"
       : "Câu tiếp →";
@@ -400,7 +533,6 @@ function applyMarking(q, a) {
   }
 
   if (btnNext) btnNext.textContent = current === quiz.length - 1 ? "Kết thúc" : "Câu tiếp →";
-
   if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise();
 }
 
@@ -418,7 +550,7 @@ function showResult() {
 
   const correctCount = answered.filter((a) => a.correct).length;
   if (resultSummary) {
-    resultSummary.textContent = `Bạn đúng ${correctCount}/${answered.length} câu. (Xanh = đúng, Đỏ = bạn chọn sai, ⏭ = bỏ qua)`;
+    resultSummary.textContent = `Bạn đúng ${correctCount}/${answered.length} câu.`;
   }
 
   if (resultList) resultList.innerHTML = "";
@@ -496,6 +628,8 @@ function resetToPick() {
   if (screenPick) screenPick.style.display = "";
   if (screenQuiz) screenQuiz.style.display = "none";
   if (screenResult) screenResult.style.display = "none";
+
+  setPickTab("local");
 }
 
 function cleanupUrls() {
@@ -504,44 +638,3 @@ function cleanupUrls() {
   }
   blobUrlMap = new Map();
 }
-
-// ===== SKIP (Ctrl+S) =====
-// Skip = bỏ qua câu hiện tại, không chấm, chuyển sang câu tiếp
-// Nếu đang ở câu cuối => tự mở danh sách
-function skipCurrentQuestion() {
-  answered[current] = { selectedIdxs: [], checked: false, correct: false, skipped: true };
-
-  if (current === quiz.length - 1) {
-    showResult();
-    return;
-  }
-
-  current++;
-  renderQuestion();
-}
-
-// ===== PHÍM TẮT =====
-document.addEventListener("keydown", (e) => {
-  // Không bắt phím khi đang gõ input/textarea
-  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
-  if (tag === "input" || tag === "textarea") return;
-
-  // Chỉ bắt khi màn quiz đang hiển thị
-  const isQuizVisible = screenQuiz && screenQuiz.style.display !== "none";
-  if (!isQuizVisible) return;
-
-  // Ctrl + N : Chọn mới
-  if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "n") {
-    e.preventDefault();
-    const ok = confirm("Bạn muốn chọn bộ câu hỏi (ZIP) khác?\nTiến độ hiện tại sẽ bị reset.");
-    if (ok) resetToPick();
-    return;
-  }
-
-  // Ctrl + S : Skip câu hiện tại
-  if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
-    e.preventDefault();
-    skipCurrentQuestion();
-    return;
-  }
-});

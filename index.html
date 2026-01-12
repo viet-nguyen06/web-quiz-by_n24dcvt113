@@ -3,62 +3,92 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ôn tập trắc nghiệm</title>
+  <title>Ôn tập</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="wrap">
 
-    <!-- PICK ZIP -->
+    <!-- PICK -->
     <div class="card" id="screenPick">
-      <h2>Ôn tập trắc nghiệm</h2>
-      <p class="muted">
-        ZIP cần có <code>questions.yaml</code> (hoặc <code>questions.yml</code>) ở gốc ZIP và các file ảnh (nếu có).
-        Trong YAML, ảnh dùng cú pháp <code>[img=đường_dẫn_trong_zip]</code>.
-      </p>
+      <h2>Ôn tập</h2>
 
-      <div class="row">
-        <input type="file" id="zipInput" accept=".zip" />
-        <button class="btn" id="btnLoad" disabled>Play</button>
-        <span class="muted" id="pickHint"></span>
+      <!-- TAB BAR -->
+      <div class="tabs" role="tablist" aria-label="Chọn nguồn bộ câu hỏi">
+        <button class="tab active" id="tabLocal" role="tab" aria-selected="true" aria-controls="panelLocal">
+          ZIP thủ công
+        </button>
+        <button class="tab" id="tabLibrary" role="tab" aria-selected="false" aria-controls="panelLibrary">
+          Thư viện bộ có sẵn
+        </button>
       </div>
 
-      <div class="hr"></div>
-      <p class="muted">
-        <strong>Tải tài liệu mẫu:</strong> 
-        <a href="https://github.com/viet-nguyen06/web-quiz-by_n24dcvt113/raw/main/demo.zip" download>
+      <!-- PANEL 1: ZIP thủ công -->
+      <div id="panelLocal" class="tab-panel" role="tabpanel" aria-labelledby="tabLocal">
+        <p class="muted">
+          ZIP cần có <code>questions.yaml</code> (hoặc <code>questions.yml</code>) ở gốc ZIP và các file ảnh (nếu có).
+          Trong YAML, ảnh dùng cú pháp <code>[img=đường_dẫn_trong_zip]</code>.
+        </p>
+
+        <div class="row">
+          <input type="file" id="zipInput" accept=".zip" />
+          <button class="btn" id="btnLoad" disabled>Play</button>
+          <span class="muted" id="pickHint"></span>
+        </div>
+
+        <div class="hr"></div>
+        <p class="muted">
+          <strong>Tải tài liệu mẫu:</strong>
+          <a href="https://github.com/viet-nguyen06/web-quiz-by_n24dcvt113/raw/main/demo.zip" download>
             Click để tải file Demo.zip
-        </a>
-    </p>
+          </a>
+        </p>
 
-    <hr>
+        <hr>
 
-    <div class="guide-section">
-        <h3>Cách tạo file .zip để ôn tập:</h3>
-        <ul>
+        <div class="guide-section">
+          <h3>Cách tạo file .zip để ôn tập:</h3>
+          <ul>
             <li>
-                <strong>Bước 1: Tạo file nội dung</strong>
-                <p>Tạo một file văn bản có tên là <code>questions.yaml</code>. Cấu trúc nội dung phải tuân thủ định dạng trong file demo.</p>
+              <strong>Bước 1: Tạo file nội dung</strong>
+              <p>Tạo một file văn bản có tên là <code>questions.yaml</code>. Cấu trúc nội dung phải tuân thủ định dạng trong file demo.</p>
             </li>
             <li>
-                <strong>Bước 2: Soạn thảo câu hỏi</strong>
-                <ul>
-                    <li>Tăng <code>id</code> theo số thứ tự câu hỏi (1, 2, 3...).</li>
-                    <li>Sử dụng ký hiệu <code>##</code> cho các lựa chọn sai.</li>
-                    <li>Sử dụng ký hiệu <code>#$</code> cho lựa chọn đúng duy nhất.</li>
-                    <li>Hỗ trợ công thức Toán học bằng **Latex**.</li>
-                </ul>
+              <strong>Bước 2: Soạn thảo câu hỏi</strong>
+              <ul>
+                <li>Tăng <code>id</code> theo số thứ tự câu hỏi (1, 2, 3...).</li>
+                <li>Sử dụng ký hiệu <code>##</code> cho các lựa chọn sai.</li>
+                <li>Sử dụng ký hiệu <code>#$</code> cho lựa chọn đúng duy nhất.</li>
+                <li>Hỗ trợ công thức Toán học bằng <b>Latex</b>.</li>
+              </ul>
             </li>
             <li>
-                <strong>Bước 3: Chèn hình ảnh (nếu có)</strong>
-                <p>Sử dụng cú pháp <code>[img=ten_hinh.png]</code> trong nội dung câu hỏi. Lưu ý các file hình ảnh phải nằm **cùng thư mục** với file <code>questions.yaml</code>.</p>
+              <strong>Bước 3: Chèn hình ảnh (nếu có)</strong>
+              <p>Sử dụng cú pháp <code>[img=ten_hinh.png]</code> trong nội dung câu hỏi. Lưu ý các file hình ảnh phải nằm <b>cùng thư mục</b> với file <code>questions.yaml</code>.</p>
             </li>
             <li>
-                <strong>Bước 4: Nén file</strong>
-                <p>Chọn file <code>questions.yaml</code> và các hình ảnh liên quan, sau đó **nén lại (Zip)** thành một file duy nhất để tải lên hệ thống.</p>
+              <strong>Bước 4: Nén file</strong>
+              <p>Chọn file <code>questions.yaml</code> và các hình ảnh liên quan, sau đó <b>nén lại (Zip)</b> thành một file duy nhất để tải lên hệ thống.</p>
             </li>
-        </ul>
-    </div>
+          </ul>
+        </div>
+      </div>
+
+      <!-- PANEL 2: THƯ VIỆN (CARD GRID) -->
+      <div id="panelLibrary" class="tab-panel" role="tabpanel" aria-labelledby="tabLibrary" style="display:none;">
+        <p class="muted">
+          Danh sách lấy từ <code>packs/index.json</code>. Bấm <b>Play</b> để tải ZIP và bắt đầu.
+        </p>
+
+        <div class="row" style="margin-top:8px;">
+          <input id="packSearch" class="search" placeholder="Tìm theo tên chương / tên bộ..." />
+          <span class="muted" id="packStatus">Đang tải danh sách…</span>
+        </div>
+
+        <div class="hr"></div>
+
+        <div id="packGrid" class="pack-grid"></div>
+      </div>
     </div>
 
     <!-- QUIZ -->
@@ -85,10 +115,8 @@
       <div id="qContent"></div>
       <div class="choices" id="choices"></div>
 
-      <!-- TOOLBAR: Chọn mới cùng hàng với Tiếp -->
       <div class="toolbar">
         <button class="btn secondary" id="btnNewCorner" title="Chọn bộ câu hỏi (ZIP) khác">Chọn mới</button>
-
         <div class="toolbar-spacer"></div>
         <button class="btn secondary" id="btnPrev">← Trước</button>
         <button class="btn" id="btnNext">Tiếp →</button>
@@ -124,5 +152,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
-
