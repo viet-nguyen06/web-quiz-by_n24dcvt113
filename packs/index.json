@@ -1,12 +1,13 @@
 {
   "packs": [
     {
-      "id": "demo1",
+      "id": "xlths_c1",
       "chapter": "Chương 1",
-      "title": "CTDL&GT - Chương 1 (Khái niệm)",
+      "title": "Xử Lí Tín Hiệu Số",
       "zipUrl": "https://raw.githubusercontent.com/viet-nguyen06/web-quiz-by_n24dcvt113/main/xlths_c1.zip",
       "pdfUrl": ""
     }
   ]
 }
+
 
